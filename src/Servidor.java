@@ -2,13 +2,18 @@ import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.FileOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Random;
-
+import java.util.Scanner;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.math.BigInteger;
 
 
 import javax.crypto.*;
@@ -19,6 +24,7 @@ import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 
 public class Servidor {
+
 	
 	private static final int PUERTO = 3400;
 	private String serverMessage; //Mensajes entrantes (recibidos) en el servidor
@@ -42,9 +48,9 @@ public class Servidor {
 
     enum Estado
     {
-        PKT_EN_OFICINA, PKT_RECOGIDO, PKT_EN_CLASIFICACION, PKT_DESPACHADO, 
+        PKT_EN_OFICINA, PKT_RECOGIDO, PKT_EN_CLASIFICACION, PKT_DESPACHADO,
         PKT_EN_ENTREGA, PKT_ENTREGADO, PKT_DESCONOCIDO;
-    }   
+    }
 
     //Creo que deberia ser el metodo run, para que funcione con cada thread
     public void startServer()
@@ -80,12 +86,12 @@ public class Servidor {
             	 System.out.println("Cliente "+ contador + " en linea\n");
                  contador++;
             }
-           
-            //Se obtiene el flujo de salida del cliente para enviarle mensajes
+
+            // Se obtiene el flujo de salida del cliente para enviarle mensajes
             salidaCliente = new DataOutputStream(cs.getOutputStream());
             salidaClienteObjeto = new ObjectOutputStream(cs.getOutputStream());
             entradaCliente = new DataInputStream(cs.getInputStream());
-
+          
             //Lee mensaje del cliente
              mensaje = entradaCliente.readUTF();
              if(mensaje.equals("INICIO"))
@@ -119,9 +125,8 @@ public class Servidor {
              //Imprimir Mensaje encriptado
              System.out.println("Mensaje cifrado: "+mensajeCifrado);
 
-
             System.out.println("Conexion finalizada");
-
+          
             //terminar conexion con cliente
             ss.close();
         }
@@ -134,3 +139,48 @@ public class Servidor {
    
     
 
+    //Deben venir hasheados los inputs
+    public String getPackageByUser(String clientName, String packageID) throws FileNotFoundException 
+    {        
+        String packageState = "User name or package ID are invalid";
+        Scanner sc = new Scanner(new File("Datos.csv"));
+
+        String data = sc.nextLine();
+        String dataClientName = "";
+        String dataPackageID = "";
+        
+        while (data != null) {
+            String[] dataArray = data.split(",");
+            
+            dataClientName = dataArray[0];
+            dataPackageID = dataArray[1];
+            
+            if (dataClientName == clientName && dataPackageID == packageID){
+                packageState = dataArray[2]; 
+                return packageState; 
+            }
+            
+            data = sc.nextLine();
+        
+        }
+        return packageState;
+    }
+
+    public static String getHashMd5(String input) // Algoritmo para hash de datos.
+    {
+        input = input + salt;
+        try {
+            MessageDigest md = MessageDigest.getInstance("MD5");
+            byte[] messageDigest = md.digest(input.getBytes());
+            BigInteger no = new BigInteger(1, messageDigest);
+            String hashtext = no.toString(16);
+            while (hashtext.length() < 32) {
+                hashtext = "0" + hashtext;
+            }
+            return hashtext;
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+}
