@@ -6,9 +6,11 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.math.BigInteger;
 import java.net.Socket;
 import java.security.PublicKey;
+import java.security.SecureRandom;
 import java.util.Random;
 
 import javax.crypto.Cipher;
@@ -23,6 +25,7 @@ public class Cliente extends Main
 	private Socket cs; 
 	private DataOutputStream salidaServidor; 
 	private DataInputStream entradaServidor;
+    private ObjectOutputStream salidaServidorObjeto; 
 
    // private ObjectInputStream entradaServidorObjeto;
     
@@ -92,8 +95,31 @@ public class Cliente extends Main
                if(!mensajeDescifrado2.equals(numeroAleatorio)){
                     cs.close();
                }
-               System.out.println("El mensaje recibido es correcto");
+               System.out.println("El reto recibido es correcto");
                 
+
+               //Generar llave simetrica
+               KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");
+               SecureRandom secureRandom = new SecureRandom();
+                int keyBitSize = 256;
+                keyGenerator.init(keyBitSize, secureRandom);
+                SecretKey llaveSimetrica = keyGenerator.generateKey();
+
+                //Cifrar llave simetrica
+                //Revisar no se usa utf8
+                rsaCipher.init(Cipher.ENCRYPT_MODE, llavePublicaServidor);
+                byte[] llaveSimetricaCifrada = rsaCipher.doFinal(llaveSimetrica.getEncoded());
+
+                //Enviar llave Simetrica cifrada
+                salidaServidorObjeto = new ObjectOutputStream(cs.getOutputStream());
+                salidaServidorObjeto.writeObject(llaveSimetricaCifrada);
+                salidaServidorObjeto.flush();
+
+                //Recibir ACK  de llave simetrica
+               String msg2 =  entradaServidor.readUTF();
+               System.out.println("Se recibio el mensaje "+msg2+ " correspondiente a la llave simetrica");
+
+               
             }
             
             //Finalizar conexion                      

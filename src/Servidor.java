@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -20,6 +21,7 @@ import javax.crypto.Cipher;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
+import javax.crypto.spec.SecretKeySpec;
 
 public class Servidor {
 
@@ -36,6 +38,7 @@ public class Servidor {
     private String mensajeNumero;
     private PrivateKey privateKey;
     private PublicKey publickey;
+    private SecretKey llaveSimetrica;
 
 	private int numeroClientes = 0;
 	private static int contador = 0;
@@ -125,6 +128,20 @@ public class Servidor {
             
              //Imprimir Mensaje encriptado
              System.out.println("Mensaje cifrado: "+mensajeCifrado);
+
+
+            //Recibir llave cifrada simetrica del cliente
+            ObjectInputStream entradaClienteObjeto = new ObjectInputStream(cs.getInputStream());
+            byte[] llaveSimetricaR = (byte[])entradaClienteObjeto.readObject();
+           
+            //Descifrar llave simetrica
+            rsaCipher.init(Cipher.DECRYPT_MODE, privateKey);
+            byte[] mensajeDescifrado = rsaCipher.doFinal(llaveSimetricaR);
+            llaveSimetrica = new SecretKeySpec(mensajeDescifrado, 0, mensajeDescifrado.length, "AES");
+           
+            //Enviar ACK de llave simetrica
+            salidaCliente.writeUTF("ACK");
+
              
             }
             System.out.println("Conexion finalizada");
