@@ -44,6 +44,7 @@ public class Servidor {
 	private int numeroClientes = 0;
 	private static int contador = 0;
     private byte[] nomCifrado;
+    private byte[] idPaqueteCifrado;
     
 	
     public Servidor(int nC) throws IOException{
@@ -165,6 +166,26 @@ public class Servidor {
                     salidaCliente.writeUTF("ERROR");
                 }
 
+                //Recibir id del paquete cifrado
+                int lengthP =entradaCliente.readInt();
+                if(lengthP>0){
+                    idPaqueteCifrado = new byte[lengthP];
+                    entradaCliente.readFully(idPaqueteCifrado, 0, lengthP);
+                }
+
+                 //Descifrar id del paquete
+                 rsaCipher.init(Cipher.DECRYPT_MODE, llaveSimetrica);
+                 byte[] idPaqueteDescifrado = rsaCipher.doFinal(idPaqueteCifrado);
+                 String idPaqueteDescifrado2 = new String(idPaqueteDescifrado, "UTF8");
+                
+                 //Buscar id en la tabla
+                 //En caso de que no corresponda el nombre con el id
+                 // o no exista en la tabla se retorna NO
+                 String estadoo = buscarIdyRetornarEstado(nombreDescifrado2, idPaqueteDescifrado2);
+                 if(!estadoo.equals("NO")){
+                    System.out.println(estadoo);
+                //Voy aqui se cifra diferente con llava simetrica
+                 }
             }
 
             System.out.println("Conexion finalizada");
@@ -178,6 +199,42 @@ public class Servidor {
         }
     }
     
+    public String buscarIdyRetornarEstado( String Nombre, String idPaque) throws IOException{
+        BufferedReader br = null;
+        String line = "";
+        String estadoPaquete = "";
+        String rta = "NO";
+        try {
+            br = new BufferedReader(new FileReader("src/Datos.csv"));
+            
+            String dataClientName = "";
+            String idPackage = "";
+            
+            
+                    
+            while ((line = br.readLine()) != null) {
+                String[] dataArray = line.split(",");
+                
+                dataClientName = dataArray[0];
+                idPackage = dataArray[1];
+
+                if (dataClientName.equals(Nombre)&&idPackage.equals(idPaque)){
+                    estadoPaquete = dataArray[2];
+                    rta = estadoPaquete;
+                    return rta;
+                }   
+
+                return rta;
+            
+            }
+           
+        } catch (FileNotFoundException e) {
+            
+            e.printStackTrace();
+        }       
+        return "";
+    }
+
 
     public Boolean buscarNombre(String Nombre) throws IOException{
         boolean esta = false;

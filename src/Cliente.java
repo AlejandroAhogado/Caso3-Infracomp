@@ -30,7 +30,7 @@ public class Cliente extends Main
     //Atributos cliente
     private String nombre;
 	private int id;
-    private int idPaquete;
+    private String idPaquete;
     private String estadoPaqueteCliente;
 
 
@@ -42,7 +42,7 @@ public class Cliente extends Main
     private byte[] msgCifrado;
 
 	
-    public Cliente(int idd, String nom, int idPaq) throws IOException{
+    public Cliente(int idd, String nom, String idPaq) throws IOException{
     	this.id = idd;
         this.nombre = nom;
         this.idPaquete = idPaq;
@@ -144,10 +144,13 @@ public class Cliente extends Main
                     cs.close();
                }
 
-               //Cifrar id del cliente con llave simetrica
+               //Cifrar id del paquete con llave simetrica
                rsaCipher.init(Cipher.ENCRYPT_MODE, llaveSimetrica);
-                byte[] idCifrado = rsaCipher.doFinal(id.getBytes("UTF8"));
+                byte[] idPaqueteCifrado = rsaCipher.doFinal(idPaquete.getBytes("UTF8"));
                
+               //Enviar id del paquete 
+               salidaServidor.writeInt(idPaqueteCifrado.length);
+               salidaServidor.write(idPaqueteCifrado);
             }
             
             //Finalizar conexion                      

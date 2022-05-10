@@ -39,7 +39,7 @@ public class Main {
 				String nombreCliente = sa.nextLine();
 
 				System.out.println("\nIngrese el id del paquete");
-				int idPaquete = sa.nextInt();
+				String idPaquete = sa.nextLine();
 
 				System.out.println("\nIniciando cliente numero "+i);
 				Cliente cliente = new Cliente(i,nombreCliente, idPaquete);
