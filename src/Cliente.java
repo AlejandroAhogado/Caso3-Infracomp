@@ -23,11 +23,13 @@ public class Cliente extends Main
 	private Socket cs; 
 	private DataOutputStream salidaServidor; 
 	private DataInputStream entradaServidor;
+
    // private ObjectInputStream entradaServidorObjeto;
     
    private BigInteger prueba = new BigInteger("1000000000000000000000000");
 
 	private String mensaje;
+    private byte[] msgCifrado;
 
 	private int id;
 	
@@ -52,19 +54,28 @@ public class Cliente extends Main
             //Se manda al servidor el mensaje de inicio
             salidaServidor.writeUTF("INICIO");      
             
-            //Recibir ACK
+            //Recibir ACK            
             mensaje = entradaServidor.readUTF();
+            
+           //Verificar que se haya recibido el ACK
             if(mensaje.equals("ACK"))
-            {
+            {   
                 //Imprimir ACK recibido del servidor
-                System.out.println(mensaje);
+                System.out.println("Se recibio el mensaje: "+mensaje);
 
                 //Pendiente
-                //Enviar reto de 24 digitos
-                salidaServidor.writeInt(20);; 
+                //Enviar reto de 24 digitos como string al otro lado 
+                String numeroAleatorio = numAleatorio();
+                salidaServidor.writeUTF(numeroAleatorio);
+                //System.out.println("El reto antes de cifrar es: "+numeroAleatorio);
 
                 //Recibir reto cifrado
-                byte[] msgCifrado = entradaServidor.readAllBytes();
+                int length =entradaServidor.readInt();
+                if(length>0){
+                    msgCifrado = new byte[length];
+                    entradaServidor.readFully(msgCifrado, 0, length);
+                }
+               
 
                 //Recibir llave publica del servidor
                // ObjectInputStream entradaServidorObjeto = new ObjectInputStream(new FileInputStream("server.pub")); 
@@ -75,11 +86,14 @@ public class Cliente extends Main
                 rsaCipher.init(Cipher.DECRYPT_MODE, llavePublicaServidor);
                 byte[] mensajeDescifrado = rsaCipher.doFinal(msgCifrado);
                 String mensajeDescifrado2 = new String(mensajeDescifrado, "UTF8");
-                System.out.println(mensajeDescifrado2);
-               
-               
-                // File publicKeyFile = new File("public.key");
-                //byte[] publicKeyBytes = Files.readAllBytes(publicKeyFile.toPath());
+                              
+                //Verificar que el mensaje descifrado es correcto
+                //En caso de que no sea el valor esperado se finaliza la conexion
+               if(!mensajeDescifrado2.equals(numeroAleatorio)){
+                    cs.close();
+               }
+               System.out.println("El mensaje recibido es correcto");
+                
             }
             
             //Finalizar conexion                      
@@ -92,18 +106,21 @@ public class Cliente extends Main
         }
     }
 
-     //Generar reto
-     private BigInteger numAleatorio(){
+    
+    
+    //Generar reto
+     private String numAleatorio(){
 
         //Random rand = new Random();
-        //Math.random() * (max-min) + min;
-        int numero = (int) Math.random() * (99999999-10000000) + 10000000;
-        int numero2 = (int) Math.random() * (99999999-10000000) + 10000000;
-        int numero3 = (int) Math.random() * (99999999-10000000) + 10000000;
-
+        //Formula utilizada: Math.random() * (max-min) + min;
+        int numero = (int) (Math.random() * (100000000-10000000) + 10000000);
+        
+        int numero2 = (int) (Math.random() * (100000000-10000000) + 10000000);
+        
+        int numero3 = (int) (Math.random() * (100000000-10000000) + 10000000);
+       
         String numeroCompleto = Integer.toString(numero)+Integer.toString(numero2)+Integer.toString(numero3);
-        BigInteger prueba = new BigInteger(numeroCompleto);
-        return prueba;
+        return numeroCompleto;
         }
 
 }

@@ -76,7 +76,7 @@ public class Servidor {
         	ss = new ServerSocket(PUERTO);
     		cs = new Socket(); 
         	
-            System.out.println("Esperando conexion\n");
+            System.out.println("Esperando conexion...\n");
 
             while(contador<numeroClientes) {
             	 cs = ss.accept(); //Inicia el socket y espera una conexion desde un cliente
@@ -86,26 +86,29 @@ public class Servidor {
 
             // Se obtiene el flujo de salida del cliente para enviarle mensajes
             salidaCliente = new DataOutputStream(cs.getOutputStream());
-            salidaClienteObjeto = new ObjectOutputStream(cs.getOutputStream());
+            
             entradaCliente = new DataInputStream(cs.getInputStream());
-          
+            
             //Lee mensaje del cliente
              mensaje = entradaCliente.readUTF();
+            
              if(mensaje.equals("INICIO"))
              {
                 //Enviar mensaje al cliente de ACK
                 salidaCliente.writeUTF("ACK");
-             }
+                
+             
              
              //Recibir reto del cliente
              //Falta revisar que cuando lo recibe como lo maneja byte?
-             mensajeNumero = String.valueOf(entradaCliente.readInt());
-
+             mensajeNumero = entradaCliente.readUTF();
+            
              //Encriptar reto cifrado con llave privada del servidor
              rsaCipher.init(Cipher.ENCRYPT_MODE, keypair.getPrivate());
              byte[] mensajeCifrado = rsaCipher.doFinal(mensajeNumero.getBytes("UTF8"));
             
              //Enviar mensaje cifrado a el cliente
+             salidaCliente.writeInt(mensajeCifrado.length);
              salidaCliente.write(mensajeCifrado);
 
 
@@ -113,15 +116,17 @@ public class Servidor {
             // try (FileOutputStream fos = new FileOutputStream("public.key")) {
             // fos.write(keypair.getPublic().getEncoded());
             //}
+            salidaClienteObjeto = new ObjectOutputStream(cs.getOutputStream());
             salidaClienteObjeto.writeObject(keypair.getPublic());
             salidaClienteObjeto.flush();
             
-            System.out.println(keypair.getPublic());
+            //System.out.println(keypair.getPublic());
 
             
              //Imprimir Mensaje encriptado
              System.out.println("Mensaje cifrado: "+mensajeCifrado);
-
+             
+            }
             System.out.println("Conexion finalizada");
           
             //terminar conexion con cliente

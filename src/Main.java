@@ -30,7 +30,8 @@ public class Main {
 			for(int i=0; i<numeroClientes ; i++)
 			{
 				Cliente cliente = new Cliente(i);
-		        System.out.println("\nIniciando cliente numero "+i+"\n");
+				System.out.println("\nEsperando...\n");
+		        System.out.println("\nIniciando cliente numero "+i);
 		        cliente.startClient(); 
 			}
 			
