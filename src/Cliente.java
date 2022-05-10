@@ -27,6 +27,13 @@ public class Cliente extends Main
 	private DataInputStream entradaServidor;
     private ObjectOutputStream salidaServidorObjeto; 
 
+    //Atributos cliente
+    private String nombre;
+	private int id;
+    private int idPaquete;
+    private String estadoPaqueteCliente;
+
+
    // private ObjectInputStream entradaServidorObjeto;
     
    private BigInteger prueba = new BigInteger("1000000000000000000000000");
@@ -34,11 +41,13 @@ public class Cliente extends Main
 	private String mensaje;
     private byte[] msgCifrado;
 
-	private int id;
 	
-    public Cliente(int idd) throws IOException{
+    public Cliente(int idd, String nom, int idPaq) throws IOException{
     	this.id = idd;
-    	} 
+        this.nombre = nom;
+        this.idPaquete = idPaq;
+       
+    } 
     
     public void startClient() //deberia ser el run para los threads del cliente
     {
@@ -119,6 +128,7 @@ public class Cliente extends Main
                String msg2 =  entradaServidor.readUTF();
                System.out.println("Se recibio el mensaje "+msg2+ " correspondiente a la llave simetrica");
 
+               //Enviar nombre del cliente
                
             }
             

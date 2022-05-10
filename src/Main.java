@@ -29,13 +29,26 @@ public class Main {
 		{	
 			for(int i=0; i<numeroClientes ; i++)
 			{
-				Cliente cliente = new Cliente(i);
+				//id, nombre, idPaquete
+				
+				Scanner sa = new Scanner(System.in);
+
 				System.out.println("\nEsperando...\n");
-		        System.out.println("\nIniciando cliente numero "+i);
+
+				System.out.println("Ingrese el nombre del cliente:");
+				String nombreCliente = sa.nextLine();
+
+				System.out.println("\nIngrese el id del paquete");
+				int idPaquete = sa.nextInt();
+
+				System.out.println("\nIniciando cliente numero "+i);
+				Cliente cliente = new Cliente(i,nombreCliente, idPaquete);
 		        cliente.startClient(); 
+				sa.close();
 			}
 			
 		}
+		
 		sc.close();
 	}
 
