@@ -6,8 +6,10 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
+import java.math.BigInteger;
 import java.net.Socket;
 import java.security.PublicKey;
+import java.util.Random;
 
 import javax.crypto.Cipher;
 import javax.crypto.*;
@@ -23,6 +25,8 @@ public class Cliente extends Main
 	private DataInputStream entradaServidor;
    // private ObjectInputStream entradaServidorObjeto;
     
+   private BigInteger prueba = new BigInteger("1000000000000000000000000");
+
 	private String mensaje;
 
 	private int id;
@@ -89,5 +93,17 @@ public class Cliente extends Main
     }
 
      //Generar reto
+     private BigInteger numAleatorio(){
+
+        //Random rand = new Random();
+        //Math.random() * (max-min) + min;
+        int numero = (int) Math.random() * (99999999-10000000) + 10000000;
+        int numero2 = (int) Math.random() * (99999999-10000000) + 10000000;
+        int numero3 = (int) Math.random() * (99999999-10000000) + 10000000;
+
+        String numeroCompleto = Integer.toString(numero)+Integer.toString(numero2)+Integer.toString(numero3);
+        BigInteger prueba = new BigInteger(numeroCompleto);
+        return prueba;
+        }
 
 }
