@@ -128,7 +128,25 @@ public class Cliente extends Main
                String msg2 =  entradaServidor.readUTF();
                System.out.println("Se recibio el mensaje "+msg2+ " correspondiente a la llave simetrica");
 
-               //Enviar nombre del cliente
+               //Cifrar nombre del cliente con publica del servidor
+               rsaCipher.init(Cipher.ENCRYPT_MODE, llavePublicaServidor);
+                byte[] nombreCifrado = rsaCipher.doFinal(nombre.getBytes("UTF8"));
+               
+                //Enviar nombre del cliente
+               salidaServidor.writeInt(nombreCifrado.length);
+               salidaServidor.write(nombreCifrado);
+
+               //Recibir ACK como confirmacion de que el nombre del cliente existe
+              //Si el mensaje es diferente a ACK es porque no existe y se termina comunicacion
+               String msgCN = entradaServidor.readUTF();
+               System.out.println(msgCN);
+               if(!msgCN.equals("ACK")){
+                    cs.close();
+               }
+
+               //Cifrar id del cliente con llave simetrica
+               rsaCipher.init(Cipher.ENCRYPT_MODE, llaveSimetrica);
+                byte[] idCifrado = rsaCipher.doFinal(id.getBytes("UTF8"));
                
             }
             

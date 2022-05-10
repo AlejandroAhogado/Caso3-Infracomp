@@ -2,6 +2,7 @@ import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -42,6 +43,7 @@ public class Servidor {
 
 	private int numeroClientes = 0;
 	private static int contador = 0;
+    private byte[] nomCifrado;
     
 	
     public Servidor(int nC) throws IOException{
@@ -97,53 +99,74 @@ public class Servidor {
             
              if(mensaje.equals("INICIO"))
              {
-                //Enviar mensaje al cliente de ACK
-                salidaCliente.writeUTF("ACK");
+                    //Enviar mensaje al cliente de ACK
+                    salidaCliente.writeUTF("ACK");
+                    
                 
-             
-             
-             //Recibir reto del cliente
-             //Falta revisar que cuando lo recibe como lo maneja byte?
-             mensajeNumero = entradaCliente.readUTF();
+                
+                //Recibir reto del cliente
+                //Falta revisar que cuando lo recibe como lo maneja byte?
+                mensajeNumero = entradaCliente.readUTF();
+                
+                //Encriptar reto cifrado con llave privada del servidor
+                rsaCipher.init(Cipher.ENCRYPT_MODE, keypair.getPrivate());
+                byte[] mensajeCifrado = rsaCipher.doFinal(mensajeNumero.getBytes("UTF8"));
+                
+                //Enviar mensaje cifrado a el cliente
+                salidaCliente.writeInt(mensajeCifrado.length);
+                salidaCliente.write(mensajeCifrado);
+
+
+                //Enviar llave publica
+                // try (FileOutputStream fos = new FileOutputStream("public.key")) {
+                // fos.write(keypair.getPublic().getEncoded());
+                //}
+                salidaClienteObjeto = new ObjectOutputStream(cs.getOutputStream());
+                salidaClienteObjeto.writeObject(keypair.getPublic());
+                salidaClienteObjeto.flush();
+                
+                //System.out.println(keypair.getPublic());
+
+                
+                //Imprimir Mensaje encriptado
+                System.out.println("Mensaje cifrado: "+mensajeCifrado);
+
+
+                //Recibir llave cifrada simetrica del cliente
+                ObjectInputStream entradaClienteObjeto = new ObjectInputStream(cs.getInputStream());
+                byte[] llaveSimetricaR = (byte[])entradaClienteObjeto.readObject();
             
-             //Encriptar reto cifrado con llave privada del servidor
-             rsaCipher.init(Cipher.ENCRYPT_MODE, keypair.getPrivate());
-             byte[] mensajeCifrado = rsaCipher.doFinal(mensajeNumero.getBytes("UTF8"));
+                //Descifrar llave simetrica
+                rsaCipher.init(Cipher.DECRYPT_MODE, privateKey);
+                byte[] mensajeDescifrado = rsaCipher.doFinal(llaveSimetricaR);
+                llaveSimetrica = new SecretKeySpec(mensajeDescifrado, 0, mensajeDescifrado.length, "AES");
             
-             //Enviar mensaje cifrado a el cliente
-             salidaCliente.writeInt(mensajeCifrado.length);
-             salidaCliente.write(mensajeCifrado);
+                //Enviar ACK de llave simetrica
+                salidaCliente.writeUTF("ACK");
 
+                //Recibir nombre cifrado
+                int length =entradaCliente.readInt();
+                if(length>0){
+                    nomCifrado = new byte[length];
+                    entradaCliente.readFully(nomCifrado, 0, length);
+                }
 
-            //Enviar llave publica
-            // try (FileOutputStream fos = new FileOutputStream("public.key")) {
-            // fos.write(keypair.getPublic().getEncoded());
-            //}
-            salidaClienteObjeto = new ObjectOutputStream(cs.getOutputStream());
-            salidaClienteObjeto.writeObject(keypair.getPublic());
-            salidaClienteObjeto.flush();
-            
-            //System.out.println(keypair.getPublic());
+                
+                //Descifrar nombre del cliente
+                rsaCipher.init(Cipher.DECRYPT_MODE, privateKey);
+                byte[] nombreDescifrado = rsaCipher.doFinal(nomCifrado);
+                String nombreDescifrado2 = new String(nombreDescifrado, "UTF8");
+                
+                //Buscar nombre del cliente en la tabla
+                //En caso de que si este envio ack, sino error
+                if(buscarNombre(nombreDescifrado2)){
+                    salidaCliente.writeUTF("ACK");
+                }else{
+                    salidaCliente.writeUTF("ERROR");
+                }
 
-            
-             //Imprimir Mensaje encriptado
-             System.out.println("Mensaje cifrado: "+mensajeCifrado);
-
-
-            //Recibir llave cifrada simetrica del cliente
-            ObjectInputStream entradaClienteObjeto = new ObjectInputStream(cs.getInputStream());
-            byte[] llaveSimetricaR = (byte[])entradaClienteObjeto.readObject();
-           
-            //Descifrar llave simetrica
-            rsaCipher.init(Cipher.DECRYPT_MODE, privateKey);
-            byte[] mensajeDescifrado = rsaCipher.doFinal(llaveSimetricaR);
-            llaveSimetrica = new SecretKeySpec(mensajeDescifrado, 0, mensajeDescifrado.length, "AES");
-           
-            //Enviar ACK de llave simetrica
-            salidaCliente.writeUTF("ACK");
-
-             
             }
+
             System.out.println("Conexion finalizada");
           
             //terminar conexion con cliente
@@ -155,6 +178,36 @@ public class Servidor {
         }
     }
     
+
+    public Boolean buscarNombre(String Nombre) throws IOException{
+        boolean esta = false;
+        BufferedReader br = null;
+        String line = "";
+        try {
+            br = new BufferedReader(new FileReader("src/Datos.csv"));
+            
+            String dataClientName = "";
+            
+                    
+            while ((line = br.readLine()) != null) {
+                String[] dataArray = line.split(",");
+                
+                dataClientName = dataArray[0];
+               
+                if (dataClientName.equals(Nombre)){
+                    esta = true;;
+                }          
+            
+            }
+           
+        } catch (FileNotFoundException e) {
+            
+            e.printStackTrace();
+        }
+        return esta;
+    }
+
+
 
     //Deben venir hasheados los inputs
     public String getPackageByUser(String clientName, String packageID) throws FileNotFoundException 
