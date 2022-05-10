@@ -14,8 +14,6 @@ import java.util.Scanner;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.math.BigInteger;
-
-
 import javax.crypto.*;
 import java.security.*;
 import javax.crypto.Cipher;
@@ -27,6 +25,7 @@ public class Servidor {
 
 	
 	private static final int PUERTO = 3400;
+    private static String salt = "#$T0d0$Sab3#M3j0r!C0n=Sal#$";
 	private String serverMessage; //Mensajes entrantes (recibidos) en el servidor
 	private ServerSocket ss; //Socket del servidor
 	private Socket cs; //Socket del cliente
@@ -71,8 +70,6 @@ public class Servidor {
          // byte[] mensajeDescifrado = rsaCipher.doFinal(mensajeCifrado);
          // String mensajeDescifrado2 = new String(mensajeDescifrado, "UTF8");
          // System.out.println(mensajeDescifrado2);
-                       
-
 
 
             //Creacion socket del cliente y del servidor
@@ -135,8 +132,6 @@ public class Servidor {
             System.out.println(e.getMessage());
         }
     }
-}   
-   
     
 
     //Deben venir hasheados los inputs
