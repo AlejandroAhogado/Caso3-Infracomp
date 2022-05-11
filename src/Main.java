@@ -21,10 +21,9 @@ public class Main {
 		
 		if(tipoEjecutar.equals("servidor"))
 		{
-			 Servidor servidor = new Servidor(numeroClientes); 
+			ServidorConcurrente servidor = new ServidorConcurrente(numeroClientes); 
 
-		     System.out.println("\nIniciando servidor\n");
-		     servidor.startServer(); 
+		    System.out.println("\nIniciando servidor\n");
 		}
 		else
 		{		
@@ -32,9 +31,6 @@ public class Main {
 			for(int i=0; i<numeroClientes ; i++)
 			{
 				//id, nombre, idPaquete
-				
-				
-
 				System.out.println("\nEsperando...\n");
 
 				System.out.println("Ingrese el nombre del cliente:");
@@ -44,8 +40,8 @@ public class Main {
 				String idPaquete = sa.nextLine();
 
 				System.out.println("\nIniciando cliente numero "+i);
-				Cliente cliente = new Cliente(i,nombreCliente, idPaquete);
-		        cliente.startClient(); 
+				ClienteConcurrente cliente = new ClienteConcurrente(i,nombreCliente, idPaquete);
+		        cliente.run(); 
 				
 			}
 			sa.close();
