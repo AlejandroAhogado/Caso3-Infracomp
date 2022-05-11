@@ -27,12 +27,13 @@ public class Main {
 		     servidor.startServer(); 
 		}
 		else
-		{	
+		{		
+			Scanner sa = new Scanner(System.in);
 			for(int i=0; i<numeroClientes ; i++)
 			{
 				//id, nombre, idPaquete
 				
-				Scanner sa = new Scanner(System.in);
+				
 
 				System.out.println("\nEsperando...\n");
 
@@ -45,9 +46,9 @@ public class Main {
 				System.out.println("\nIniciando cliente numero "+i);
 				Cliente cliente = new Cliente(i,nombreCliente, idPaquete);
 		        cliente.startClient(); 
-				sa.close();
+				
 			}
-			
+			sa.close();
 		}
 		
 		sc.close();

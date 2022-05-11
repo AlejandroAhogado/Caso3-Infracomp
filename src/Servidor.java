@@ -57,181 +57,202 @@ public class Servidor {
         PKT_EN_ENTREGA, PKT_ENTREGADO, PKT_DESCONOCIDO;
     }
 
-    // Creo que deberia ser el metodo run, para que funcione con cada thread
-    public void startServer() {
-
-        try {
-            // Generacion de llaves publica/privada servidor
-            KeyPairGenerator keygen = KeyPairGenerator.getInstance("RSA");
-            keygen.initialize(1024);
-            KeyPair keypair = keygen.generateKeyPair();
-            Cipher rsaCipher = Cipher.getInstance("RSA");
-            Cipher rsaCiphera = Cipher.getInstance("AES/CBC/PKCS5Padding");
-            publickey = keypair.getPublic();
-            privateKey = keypair.getPrivate();
-            // A
-            // para descifrar
+    //Creo que deberia ser el metodo run, para que funcione con cada thread
+    public void startServer()
+    { 
+        while(contador<numeroClientes)
+       {     
+            try {
+                //Generacion de llaves publica/privada servidor
+                KeyPairGenerator keygen = KeyPairGenerator.getInstance("RSA");
+                keygen.initialize(1024);
+                KeyPair keypair = keygen.generateKeyPair();            
+                Cipher rsaCipher = Cipher.getInstance("RSA");
+                Cipher rsaCiphera = Cipher.getInstance("AES/CBC/PKCS5Padding");
+                publickey = keypair.getPublic();
+                privateKey = keypair.getPrivate();
+            //A
+            // para descifrar  
             // rsaCipher.init(Cipher.DECRYPT_MODE, keypair.getPublic());
             // byte[] mensajeDescifrado = rsaCipher.doFinal(mensajeCifrado);
             // String mensajeDescifrado2 = new String(mensajeDescifrado, "UTF8");
             // System.out.println(mensajeDescifrado2);
 
-            // Creacion socket del cliente y del servidor
-            ss = new ServerSocket(PUERTO);
-            cs = new Socket();
 
-            System.out.println("Esperando conexion...\n");
+                //Creacion socket del cliente y del servidor
+                ss = new ServerSocket(PUERTO);
+                cs = new Socket(); 
+                
+                System.out.println("Esperando conexion...\n");
 
-            while (contador < numeroClientes) {
-                cs = ss.accept(); // Inicia el socket y espera una conexion desde un cliente
-                System.out.println("Cliente " + contador + " en linea\n");
-                contador++;
-            }
+            // while(contador<numeroClientes) {
+                    cs = ss.accept(); //Inicia el socket y espera una conexion desde un cliente
+                    System.out.println("Cliente "+ contador + " en linea\n");
+                //   contador++;
+            ///}
 
-            // Se obtiene el flujo de salida del cliente para enviarle mensajes
-            salidaCliente = new DataOutputStream(cs.getOutputStream());
+                // Se obtiene el flujo de salida del cliente para enviarle mensajes
+                salidaCliente = new DataOutputStream(cs.getOutputStream());
+                
+                entradaCliente = new DataInputStream(cs.getInputStream());
+                
+                //Lee mensaje del cliente
+                mensaje = entradaCliente.readUTF();
+                
+                if(mensaje.equals("INICIO"))
+                {
+                        //Enviar mensaje al cliente de ACK
+                        salidaCliente.writeUTF("ACK");
+                        
+                    
+                    
+                    //Recibir reto del cliente
+                    //Falta revisar que cuando lo recibe como lo maneja byte?
+                    mensajeNumero = entradaCliente.readUTF();
+                    
+                    //Encriptar reto cifrado con llave privada del servidor
+                    long startTime = System.nanoTime();
+                    rsaCipher.init(Cipher.ENCRYPT_MODE, keypair.getPrivate());
+                    byte[] mensajeCifrado = rsaCipher.doFinal(mensajeNumero.getBytes("UTF8"));
+                    long endTime = System.nanoTime() - startTime;
+                    String msgt1 = "Tiempo cifrando reto con llave privada "+endTime/1e6+" ms.";
 
-            entradaCliente = new DataInputStream(cs.getInputStream());
+                    //Enviar mensaje cifrado a el cliente
+                    salidaCliente.writeInt(mensajeCifrado.length);
+                    salidaCliente.write(mensajeCifrado);
 
-            // Lee mensaje del cliente
-            mensaje = entradaCliente.readUTF();
 
-            if (mensaje.equals("INICIO")) {
-                // Enviar mensaje al cliente de ACK
-                salidaCliente.writeUTF("ACK");
+                    //Enviar llave publica
+                    // try (FileOutputStream fos = new FileOutputStream("public.key")) {
+                    // fos.write(keypair.getPublic().getEncoded());
+                    //}
+                    salidaClienteObjeto = new ObjectOutputStream(cs.getOutputStream());
+                    salidaClienteObjeto.writeObject(keypair.getPublic());
+                    salidaClienteObjeto.flush();
+                    
+                    //System.out.println(keypair.getPublic());
 
-                // Recibir reto del cliente
-                // Falta revisar que cuando lo recibe como lo maneja byte?
-                mensajeNumero = entradaCliente.readUTF();
-
-                // Encriptar reto cifrado con llave privada del servidor
-                long startTime = System.nanoTime();
-                rsaCipher.init(Cipher.ENCRYPT_MODE, keypair.getPrivate());
-                byte[] mensajeCifrado = rsaCipher.doFinal(mensajeNumero.getBytes("UTF8"));
-                long endTime = System.nanoTime() - startTime;
-                String msgt1 = "Tiempo cifrando reto con llave privada " + endTime / 1e6 + " ms.";
-
-                // Enviar mensaje cifrado a el cliente
-                salidaCliente.writeInt(mensajeCifrado.length);
-                salidaCliente.write(mensajeCifrado);
-
-                // Enviar llave publica
-                // try (FileOutputStream fos = new FileOutputStream("public.key")) {
-                // fos.write(keypair.getPublic().getEncoded());
-                // }
-                salidaClienteObjeto = new ObjectOutputStream(cs.getOutputStream());
-                salidaClienteObjeto.writeObject(keypair.getPublic());
-                salidaClienteObjeto.flush();
-
-                // System.out.println(keypair.getPublic());
-
-                // Imprimir Mensaje encriptado
+                    
+                    //Imprimir Mensaje encriptado
                 // System.out.println("Mensaje cifrado: "+mensajeCifrado);
 
-                // Recibir llave cifrada simetrica del cliente
-                ObjectInputStream entradaClienteObjeto = new ObjectInputStream(cs.getInputStream());
-                byte[] llaveSimetricaR = (byte[]) entradaClienteObjeto.readObject();
 
-                // Descifrar llave simetrica
-                rsaCipher.init(Cipher.DECRYPT_MODE, privateKey);
-                byte[] mensajeDescifrado = rsaCipher.doFinal(llaveSimetricaR);
-                llaveSimetrica = new SecretKeySpec(mensajeDescifrado, 0, mensajeDescifrado.length, "AES");
+                    //Recibir llave cifrada simetrica del cliente
+                    ObjectInputStream entradaClienteObjeto = new ObjectInputStream(cs.getInputStream());
+                    byte[] llaveSimetricaR = (byte[])entradaClienteObjeto.readObject();
+                
+                    //Descifrar llave simetrica
+                    rsaCipher.init(Cipher.DECRYPT_MODE, privateKey);
+                    byte[] mensajeDescifrado = rsaCipher.doFinal(llaveSimetricaR);
+                    llaveSimetrica = new SecretKeySpec(mensajeDescifrado, 0, mensajeDescifrado.length, "AES");
+                
 
-                // Enviar ACK de llave simetrica
-                salidaCliente.writeUTF("ACK");
-
-                // Recibir nombre cifrado
-                int length = entradaCliente.readInt();
-                if (length > 0) {
-                    nomCifrado = new byte[length];
-                    entradaCliente.readFully(nomCifrado, 0, length);
-                }
-
-                // Descifrar nombre del cliente
-                rsaCipher.init(Cipher.DECRYPT_MODE, privateKey);
-                byte[] nombreDescifrado = rsaCipher.doFinal(nomCifrado);
-                String nombreDescifrado2 = new String(nombreDescifrado, "UTF8");
-
-                // Buscar nombre del cliente en la tabla
-                // En caso de que si este envio ack, sino error
-                if (buscarNombre(nombreDescifrado2)) {
+                    //Enviar ACK de llave simetrica
                     salidaCliente.writeUTF("ACK");
-                } else {
-                    salidaCliente.writeUTF("ERROR");
+
+                    //Recibir nombre cifrado
+                    int length =entradaCliente.readInt();
+                    if(length>0){
+                        nomCifrado = new byte[length];
+                        entradaCliente.readFully(nomCifrado, 0, length);
+                    }
+
+                    
+                    //Descifrar nombre del cliente
+                    rsaCipher.init(Cipher.DECRYPT_MODE, privateKey);
+                    byte[] nombreDescifrado = rsaCipher.doFinal(nomCifrado);
+                    String nombreDescifrado2 = new String(nombreDescifrado, "UTF8");
+                    
+                    //Buscar nombre del cliente en la tabla
+                    //En caso de que si este envio ack, sino error
+                    if(buscarNombre(nombreDescifrado2)){
+                        salidaCliente.writeUTF("ACK");
+                    }else{
+                        salidaCliente.writeUTF("ERROR");
+                    }
+
+                    //Recibir Iv
+                    
+                    int length3 = entradaCliente.readInt();
+                    
+                    if (length3>0) {
+                        arregloIvv = new byte[length3];
+                        entradaCliente.readFully(arregloIvv, 0, length3);
+                    }
+                    IvParameterSpec ivv = new IvParameterSpec(arregloIvv);
+
+                    //Recibir id del paquete cifrado
+                    // int lengthP =entradaCliente.readInt();
+                    // if(lengthP>0){
+                    //     idPaqueteCifrado = new byte[lengthP];
+                    //     entradaCliente.readFully(idPaqueteCifrado, 0, lengthP);
+                    // }
+                    String idCPaqCifrad = entradaCliente.readUTF();
+
+
+                    //Descifrar id del paquete
+                    rsaCiphera.init(Cipher.DECRYPT_MODE, llaveSimetrica, ivv);
+                    byte[] idPaqueteDescifrado = rsaCiphera.doFinal(Base64.getDecoder().decode(idCPaqCifrad));
+                    String idPaqueteDescifrado2 = new String(idPaqueteDescifrado);
+                    
+
+                    //Cifrar reto con la simetrica
+                    long startTime2 = System.nanoTime();
+                    rsaCiphera.init(Cipher.ENCRYPT_MODE, llaveSimetrica, ivv);
+                    byte[] idPaqueteCifrado = rsaCiphera.doFinal(mensajeNumero.getBytes());
+                    String idCifradaSimetrica = Base64.getEncoder().encodeToString(idPaqueteCifrado);
+                    long endTime2 = System.nanoTime() - startTime2;
+                    
+                    System.out.println(msgt1+"\nTiempo en cifrar reto con llave simetrica: "+ endTime2/1e6+" ms.");
+
+                    //Buscar id en la tabla
+                    //En caso de que no corresponda el nombre con el id
+                    // o no exista en la tabla se retorna NO
+                    String estadoo = buscarIdyRetornarEstado(nombreDescifrado2, idPaqueteDescifrado2);
+                    
+                    //Cifrar estado de paquete con simetrica
+                    rsaCiphera.init(Cipher.ENCRYPT_MODE, llaveSimetrica, ivv);
+                    byte[] estadoPaqueteCifrado = rsaCiphera.doFinal(estadoo.getBytes());
+                    String estadoPaqueteCifrado2 = Base64.getEncoder().encodeToString(estadoPaqueteCifrado);
+            
+                    //Enviar estado del paquete
+                    salidaCliente.writeUTF(estadoPaqueteCifrado2);
+
+                    //Recibir ACK del estado del paquete
+                // System.out.println(entradaCliente.readUTF()+" del estado del paquete"); 
+                    entradaCliente.readUTF();
+
+                    //Calcular hmac y digest
+                    String arregloHmac = Hmac(llaveSimetrica, digest(nombreDescifrado2+idPaqueteDescifrado2));
+                    //System.out.println(nombreDescifrado2);
+                    //System.out.println(idPaqueteDescifrado2);
+
+
+                    //Enviar Hmac
+                    // salidaCliente.writeInt(arregloHmac.length);
+                    // salidaCliente.write(arregloHmac);
+                    salidaCliente.writeUTF(arregloHmac);
+
+
+
+                    //Recibir TERMINAR del hmac
+                    //Revisar hmac, deberia ser igual con los mismos valores?
+                    String msgi = entradaCliente.readUTF();
+                System.out.println(msgi); 
+
+
                 }
 
-                // Recibir Iv
-
-                int length3 = entradaCliente.readInt();
-
-                if (length3 > 0) {
-                    arregloIvv = new byte[length3];
-                    entradaCliente.readFully(arregloIvv, 0, length3);
-                }
-                IvParameterSpec ivv = new IvParameterSpec(arregloIvv);
-
-                // Recibir id del paquete cifrado
-                // int lengthP =entradaCliente.readInt();
-                // if(lengthP>0){
-                // idPaqueteCifrado = new byte[lengthP];
-                // entradaCliente.readFully(idPaqueteCifrado, 0, lengthP);
-                // }
-                String idCPaqCifrad = entradaCliente.readUTF();
-
-                // Descifrar id del paquete
-                rsaCiphera.init(Cipher.DECRYPT_MODE, llaveSimetrica, ivv);
-                byte[] idPaqueteDescifrado = rsaCiphera.doFinal(Base64.getDecoder().decode(idCPaqCifrad));
-                String idPaqueteDescifrado2 = new String(idPaqueteDescifrado);
-
-                // Cifrar reto con la simetrica
-                long startTime2 = System.nanoTime();
-                rsaCiphera.init(Cipher.ENCRYPT_MODE, llaveSimetrica, ivv);
-                byte[] idPaqueteCifrado = rsaCiphera.doFinal(mensajeNumero.getBytes());
-                String idCifradaSimetrica = Base64.getEncoder().encodeToString(idPaqueteCifrado);
-                long endTime2 = System.nanoTime() - startTime2;
-
-                System.out.println(msgt1 + "\nTiempo en cifrar reto con llave simetrica: " + endTime2 / 1e6 + " ms.");
-
-                // Buscar id en la tabla
-                // En caso de que no corresponda el nombre con el id
-                // o no exista en la tabla se retorna NO
-                String estadoo = buscarIdyRetornarEstado(nombreDescifrado2, idPaqueteDescifrado2);
-
-                // Cifrar estado de paquete con simetrica
-                rsaCiphera.init(Cipher.ENCRYPT_MODE, llaveSimetrica, ivv);
-                byte[] estadoPaqueteCifrado = rsaCiphera.doFinal(estadoo.getBytes());
-                String estadoPaqueteCifrado2 = Base64.getEncoder().encodeToString(estadoPaqueteCifrado);
-
-                // Enviar estado del paquete
-                salidaCliente.writeUTF(estadoPaqueteCifrado2);
-
-                // Recibir ACK del estado del paquete
-                // System.out.println(entradaCliente.readUTF()+" del estado del paquete");
-                entradaCliente.readUTF();
-
-                // Calcular hmac y digest
-                String arregloHmac = Hmac(llaveSimetrica, digest(nombreDescifrado2 + idPaqueteDescifrado2));
-                // System.out.println(nombreDescifrado2);
-                // System.out.println(idPaqueteDescifrado2);
-
-                // Enviar Hmac
-                // salidaCliente.writeInt(arregloHmac.length);
-                // salidaCliente.write(arregloHmac);
-                salidaCliente.writeUTF(arregloHmac);
-
-                // Recibir TERMINAR del hmac
-                // Revisar hmac, deberia ser igual con los mismos valores?
-                String msgi = entradaCliente.readUTF();
-                System.out.println(msgi);
-
+                System.out.println("Conexion finalizada");
+            
+                //terminar conexion con cliente
+                ss.close();
             }
-
-            System.out.println("Conexion finalizada");
-
-            // terminar conexion con cliente
-            ss.close();
-        } catch (Exception e) {
+            catch (Exception e)
+            {
             e.printStackTrace();
+            }
+            contador++;
         }
     }
 
