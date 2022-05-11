@@ -114,9 +114,12 @@ public class Servidor {
                 mensajeNumero = entradaCliente.readUTF();
                 
                 //Encriptar reto cifrado con llave privada del servidor
+                long startTime = System.nanoTime();
                 rsaCipher.init(Cipher.ENCRYPT_MODE, keypair.getPrivate());
                 byte[] mensajeCifrado = rsaCipher.doFinal(mensajeNumero.getBytes("UTF8"));
-                
+                long endTime = System.nanoTime() - startTime;
+                String msgt1 = "Tiempo cifrando reto con llave privada "+endTime/1e6+" ms.";
+
                 //Enviar mensaje cifrado a el cliente
                 salidaCliente.writeInt(mensajeCifrado.length);
                 salidaCliente.write(mensajeCifrado);
@@ -146,6 +149,7 @@ public class Servidor {
                 byte[] mensajeDescifrado = rsaCipher.doFinal(llaveSimetricaR);
                 llaveSimetrica = new SecretKeySpec(mensajeDescifrado, 0, mensajeDescifrado.length, "AES");
             
+
                 //Enviar ACK de llave simetrica
                 salidaCliente.writeUTF("ACK");
 
@@ -194,6 +198,16 @@ public class Servidor {
                  byte[] idPaqueteDescifrado = rsaCiphera.doFinal(Base64.getDecoder().decode(idCPaqCifrad));
                  String idPaqueteDescifrado2 = new String(idPaqueteDescifrado);
                 
+
+                //Cifrar reto con la simetrica
+                long startTime2 = System.nanoTime();
+                rsaCiphera.init(Cipher.ENCRYPT_MODE, llaveSimetrica, ivv);
+                byte[] idPaqueteCifrado = rsaCiphera.doFinal(mensajeNumero.getBytes());
+                String idCifradaSimetrica = Base64.getEncoder().encodeToString(idPaqueteCifrado);
+                long endTime2 = System.nanoTime() - startTime2;
+                
+                System.out.println(msgt1+"\nTiempo en cifrar reto con llave simetrica: "+ endTime2/1e6+" ms.");
+
                  //Buscar id en la tabla
                  //En caso de que no corresponda el nombre con el id
                  // o no exista en la tabla se retorna NO
