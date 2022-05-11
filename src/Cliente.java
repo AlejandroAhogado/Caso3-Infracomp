@@ -9,6 +9,8 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.math.BigInteger;
 import java.net.Socket;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.util.Base64;
@@ -35,6 +37,8 @@ public class Cliente extends Main
 	private int id;
     private String idPaquete;
     private String estadoPaqueteCliente;
+
+    private byte[] arregloMacD;
 
 
    // private ObjectInputStream entradaServidorObjeto;
@@ -178,6 +182,32 @@ public class Cliente extends Main
 
             //Enviar ACK del estado del paquete
             salidaServidor.writeUTF("ACK");
+
+            //Calcular hmac y digest
+            
+            String hmacCalculado = Hmac(llaveSimetrica, digest(nombre+idPaquete));
+
+           
+            //Recibir Hmac
+            // int length4 = entradaServidor.readInt();
+
+            // if (length4>0) {
+            //     	arregloMacD = new byte[length4];
+            //         entradaServidor.readFully(arregloMacD, 0, length4);
+			// 	}
+            String arregloMacD = entradaServidor.readUTF();
+
+              
+
+
+            //Deberia ser igual?
+            if(hmacCalculado.equals(arregloMacD)){
+                System.out.println("Hmac calculado: "+hmacCalculado);
+                System.out.println("Hmac recibido: "+arregloMacD);
+                salidaServidor.writeUTF("TERMINAR");
+
+            }
+            
         }
             
             //Finalizar conexion                      
@@ -211,6 +241,37 @@ public class Cliente extends Main
             byte[] iv = new byte[16];
             new SecureRandom().nextBytes(iv);
             return new IvParameterSpec(iv);
+        }
+
+        //El mensaje se va a calcular a partir del nombre del cliente
+        // y el id del paquete que este ingreso
+
+        public static String Hmac(SecretKey llave, byte[] mensaje){
+          byte[] hmacc = null;
+          StringBuilder r = new StringBuilder();
+            try {
+                Mac mac = Mac.getInstance("HMACSHA256");
+                
+                mac.init(llave);
+                hmacc = mac.doFinal(mensaje);
+                for(byte aByte:hmacc){
+                    r.append(String.format("%02x",aByte));
+                }
+                
+                
+            } catch (Exception e) {
+               e.getMessage();
+            }
+            return r.toString();
+        }
+
+        //Digest
+        public static byte[] digest( String msg) throws NoSuchAlgorithmException {
+            
+                MessageDigest md = MessageDigest.getInstance("SHA-256"); 
+                md.update(msg.getBytes());          
+                return md.digest();
+           
         }
 
 }

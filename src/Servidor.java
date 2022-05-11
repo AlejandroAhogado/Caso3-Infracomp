@@ -209,7 +209,27 @@ public class Servidor {
 
                 //Recibir ACK del estado del paquete
                 System.out.println(entradaCliente.readUTF()+" del estado del paquete"); 
-           }
+        
+                //Calcular hmac y digest
+                String arregloHmac = Hmac(llaveSimetrica, digest(nombreDescifrado2+idPaqueteDescifrado2));
+                //System.out.println(nombreDescifrado2);
+                //System.out.println(idPaqueteDescifrado2);
+
+
+                //Enviar Hmac
+                // salidaCliente.writeInt(arregloHmac.length);
+                // salidaCliente.write(arregloHmac);
+                salidaCliente.writeUTF(arregloHmac);
+
+
+
+                //Recibir TERMINAR del hmac
+                //Revisar hmac, deberia ser igual con los mismos valores?
+                String msgi = entradaCliente.readUTF();
+               System.out.println(msgi); 
+
+
+            }
 
             System.out.println("Conexion finalizada");
           
@@ -329,5 +349,36 @@ public class Servidor {
             throw new RuntimeException(e);
         }
     }
+
+    //El mensaje se va a calcular a partir del nombre del cliente
+        // y el id del paquete que este ingreso
+
+        public static String Hmac(SecretKey llave, byte[] mensaje){
+            byte[] hmacc = null;
+            StringBuilder r = new StringBuilder();
+              try {
+                  Mac mac = Mac.getInstance("HMACSHA256");
+                  
+                  mac.init(llave);
+                  hmacc = mac.doFinal(mensaje);
+                  for(byte aByte:hmacc){
+                      r.append(String.format("%02x",aByte));
+                  }
+                  
+                  
+              } catch (Exception e) {
+                 e.getMessage();
+              }
+              return r.toString();
+          }
+  
+          //Digest
+          public static byte[] digest( String msg) throws NoSuchAlgorithmException {
+              
+                  MessageDigest md = MessageDigest.getInstance("SHA-256"); 
+                    md.update(msg.getBytes()); 
+                  return md.digest();
+             
+          }
 
 }
