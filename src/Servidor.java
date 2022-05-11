@@ -198,11 +198,18 @@ public class Servidor {
                  //En caso de que no corresponda el nombre con el id
                  // o no exista en la tabla se retorna NO
                  String estadoo = buscarIdyRetornarEstado(nombreDescifrado2, idPaqueteDescifrado2);
-                 if(!estadoo.equals("NO")){
-                    System.out.println(estadoo);
-               
-                 }
-            }
+                 
+                 //Cifrar estado de paquete con simetrica
+                 rsaCiphera.init(Cipher.ENCRYPT_MODE, llaveSimetrica, ivv);
+                 byte[] estadoPaqueteCifrado = rsaCiphera.doFinal(estadoo.getBytes());
+                 String estadoPaqueteCifrado2 = Base64.getEncoder().encodeToString(estadoPaqueteCifrado);
+           
+                //Enviar estado del paquete
+                salidaCliente.writeUTF(estadoPaqueteCifrado2);
+
+                //Recibir ACK del estado del paquete
+                System.out.println(entradaCliente.readUTF()+" del estado del paquete"); 
+           }
 
             System.out.println("Conexion finalizada");
           

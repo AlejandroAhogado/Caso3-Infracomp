@@ -162,11 +162,23 @@ public class Cliente extends Main
                
                
 
-               //Enviar id del paquete 
-              // salidaServidor.writeInt(idPaqueteCifrado.length);
-             //  salidaServidor.write(idPaqueteCifrado);
+            //Enviar id del paquete 
+            // salidaServidor.writeInt(idPaqueteCifrado.length);
+            //  salidaServidor.write(idPaqueteCifrado);
              salidaServidor.writeUTF(idCifradaSimetrica);
-            }
+
+            //Recibir estado de paquete
+            String estadoPaque = entradaServidor.readUTF();
+
+            //Desencriptar estado paquete
+            rsaCiphera.init(Cipher.DECRYPT_MODE, llaveSimetrica, ivv);
+            byte[] estadoPaqueteDescifrado = rsaCiphera.doFinal(Base64.getDecoder().decode(estadoPaque));
+            String estadoPaqueteDescifrado2 = new String(estadoPaqueteDescifrado);
+            System.out.println("El estado del paquete solicitado es: "+estadoPaqueteDescifrado2);
+
+            //Enviar ACK del estado del paquete
+            salidaServidor.writeUTF("ACK");
+        }
             
             //Finalizar conexion                      
             cs.close();
