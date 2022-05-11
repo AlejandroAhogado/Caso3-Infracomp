@@ -22,6 +22,8 @@ import javax.crypto.Cipher;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
+
+import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
 public class Servidor {
@@ -45,6 +47,7 @@ public class Servidor {
 	private static int contador = 0;
     private byte[] nomCifrado;
     private byte[] idPaqueteCifrado;
+    private byte[] arregloIvv;
     
 	
     public Servidor(int nC) throws IOException{
@@ -68,9 +71,10 @@ public class Servidor {
             keygen.initialize(1024);
             KeyPair keypair = keygen.generateKeyPair();            
             Cipher rsaCipher = Cipher.getInstance("RSA");
+            Cipher rsaCiphera = Cipher.getInstance("AES/CBC/PKCS5Padding");
             publickey = keypair.getPublic();
             privateKey = keypair.getPrivate();
-           
+           //A
         // para descifrar  
          // rsaCipher.init(Cipher.DECRYPT_MODE, keypair.getPublic());
          // byte[] mensajeDescifrado = rsaCipher.doFinal(mensajeCifrado);
@@ -166,17 +170,29 @@ public class Servidor {
                     salidaCliente.writeUTF("ERROR");
                 }
 
+                //Recibir Iv
+                
+                int length3 = entradaCliente.readInt();
+                
+                if (length3>0) {
+                	arregloIvv = new byte[length3];
+                    entradaCliente.readFully(arregloIvv, 0, length3);
+				}
+                IvParameterSpec ivv = new IvParameterSpec(arregloIvv);
+
                 //Recibir id del paquete cifrado
-                int lengthP =entradaCliente.readInt();
-                if(lengthP>0){
-                    idPaqueteCifrado = new byte[lengthP];
-                    entradaCliente.readFully(idPaqueteCifrado, 0, lengthP);
-                }
+                // int lengthP =entradaCliente.readInt();
+                // if(lengthP>0){
+                //     idPaqueteCifrado = new byte[lengthP];
+                //     entradaCliente.readFully(idPaqueteCifrado, 0, lengthP);
+                // }
+                String idCPaqCifrad = entradaCliente.readUTF();
+
 
                  //Descifrar id del paquete
-                 rsaCipher.init(Cipher.DECRYPT_MODE, llaveSimetrica);
-                 byte[] idPaqueteDescifrado = rsaCipher.doFinal(idPaqueteCifrado);
-                 String idPaqueteDescifrado2 = new String(idPaqueteDescifrado, "UTF8");
+                 rsaCiphera.init(Cipher.DECRYPT_MODE, llaveSimetrica, ivv);
+                 byte[] idPaqueteDescifrado = rsaCiphera.doFinal(Base64.getDecoder().decode(idCPaqCifrad));
+                 String idPaqueteDescifrado2 = new String(idPaqueteDescifrado);
                 
                  //Buscar id en la tabla
                  //En caso de que no corresponda el nombre con el id
@@ -184,7 +200,7 @@ public class Servidor {
                  String estadoo = buscarIdyRetornarEstado(nombreDescifrado2, idPaqueteDescifrado2);
                  if(!estadoo.equals("NO")){
                     System.out.println(estadoo);
-                //Voy aqui se cifra diferente con llava simetrica
+               
                  }
             }
 
@@ -195,7 +211,7 @@ public class Servidor {
         }
         catch (Exception e)
         {
-            System.out.println(e.getMessage());
+           e.printStackTrace();
         }
     }
     
@@ -203,7 +219,7 @@ public class Servidor {
         BufferedReader br = null;
         String line = "";
         String estadoPaquete = "";
-        String rta = "NO";
+        String rta = " ";
         try {
             br = new BufferedReader(new FileReader("src/Datos.csv"));
             
@@ -218,21 +234,18 @@ public class Servidor {
                 dataClientName = dataArray[0];
                 idPackage = dataArray[1];
 
-                if (dataClientName.equals(Nombre)&&idPackage.equals(idPaque)){
+                if (dataClientName.equals(Nombre) && idPackage.equals(idPaque)){
                     estadoPaquete = dataArray[2];
                     rta = estadoPaquete;
                     return rta;
-                }   
-
-                return rta;
-            
+                }else{rta="NO";}               
             }
            
         } catch (FileNotFoundException e) {
             
             e.printStackTrace();
         }       
-        return "";
+        return rta;
     }
 
 

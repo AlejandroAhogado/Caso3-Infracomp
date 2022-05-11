@@ -11,9 +11,11 @@ import java.math.BigInteger;
 import java.net.Socket;
 import java.security.PublicKey;
 import java.security.SecureRandom;
+import java.util.Base64;
 import java.util.Random;
 
 import javax.crypto.Cipher;
+import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.*;
 
 
@@ -21,7 +23,8 @@ public class Cliente extends Main
 {
 	
 	private static final int PUERTO = 3400;
-	private final String HOST = "192.168.226.1"; 
+	private final String HOST = "192.168.226.1";
+    //private final String HOST = "192.121.0.0";  
 	private Socket cs; 
 	private DataOutputStream salidaServidor; 
 	private DataInputStream entradaServidor;
@@ -60,7 +63,8 @@ public class Cliente extends Main
             entradaServidor = new DataInputStream(cs.getInputStream());
     
             Cipher rsaCipher = Cipher.getInstance("RSA");
-           
+            Cipher rsaCiphera = Cipher.getInstance("AES/CBC/PKCS5Padding");
+           //
               
             
             //Se manda al servidor el mensaje de inicio
@@ -144,13 +148,24 @@ public class Cliente extends Main
                     cs.close();
                }
 
+               //Crear iv
+               IvParameterSpec ivv = crearIv();
+
                //Cifrar id del paquete con llave simetrica
-               rsaCipher.init(Cipher.ENCRYPT_MODE, llaveSimetrica);
-                byte[] idPaqueteCifrado = rsaCipher.doFinal(idPaquete.getBytes("UTF8"));
+               rsaCiphera.init(Cipher.ENCRYPT_MODE, llaveSimetrica, ivv);
+               byte[] idPaqueteCifrado = rsaCiphera.doFinal(idPaquete.getBytes());
+               String idCifradaSimetrica = Base64.getEncoder().encodeToString(idPaqueteCifrado);
+
+               //Enviar Iv
+               salidaServidor.writeInt((ivv.getIV()).length);
+               salidaServidor.write(ivv.getIV());
                
+               
+
                //Enviar id del paquete 
-               salidaServidor.writeInt(idPaqueteCifrado.length);
-               salidaServidor.write(idPaqueteCifrado);
+              // salidaServidor.writeInt(idPaqueteCifrado.length);
+             //  salidaServidor.write(idPaqueteCifrado);
+             salidaServidor.writeUTF(idCifradaSimetrica);
             }
             
             //Finalizar conexion                      
@@ -180,4 +195,11 @@ public class Cliente extends Main
         return numeroCompleto;
         }
 
+        public static IvParameterSpec crearIv(){
+            byte[] iv = new byte[16];
+            new SecureRandom().nextBytes(iv);
+            return new IvParameterSpec(iv);
+        }
+
 }
+
