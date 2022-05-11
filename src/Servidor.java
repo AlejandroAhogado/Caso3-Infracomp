@@ -134,7 +134,7 @@ public class Servidor {
 
                 
                 //Imprimir Mensaje encriptado
-                System.out.println("Mensaje cifrado: "+mensajeCifrado);
+               // System.out.println("Mensaje cifrado: "+mensajeCifrado);
 
 
                 //Recibir llave cifrada simetrica del cliente
@@ -208,8 +208,9 @@ public class Servidor {
                 salidaCliente.writeUTF(estadoPaqueteCifrado2);
 
                 //Recibir ACK del estado del paquete
-                System.out.println(entradaCliente.readUTF()+" del estado del paquete"); 
-        
+               // System.out.println(entradaCliente.readUTF()+" del estado del paquete"); 
+                entradaCliente.readUTF();
+
                 //Calcular hmac y digest
                 String arregloHmac = Hmac(llaveSimetrica, digest(nombreDescifrado2+idPaqueteDescifrado2));
                 //System.out.println(nombreDescifrado2);

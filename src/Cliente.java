@@ -81,7 +81,7 @@ public class Cliente extends Main
             if(mensaje.equals("ACK"))
             {   
                 //Imprimir ACK recibido del servidor
-                System.out.println("Se recibio el mensaje: "+mensaje);
+                //System.out.println("Se recibio el mensaje: "+mensaje);
 
                 //Pendiente
                 //Enviar reto de 24 digitos como string al otro lado 
@@ -112,7 +112,7 @@ public class Cliente extends Main
                if(!mensajeDescifrado2.equals(numeroAleatorio)){
                     cs.close();
                }
-               System.out.println("El reto recibido es correcto");
+              // System.out.println("El reto recibido es correcto");
                 
 
                //Generar llave simetrica
@@ -134,7 +134,7 @@ public class Cliente extends Main
 
                 //Recibir ACK  de llave simetrica
                String msg2 =  entradaServidor.readUTF();
-               System.out.println("Se recibio el mensaje "+msg2+ " correspondiente a la llave simetrica");
+               //System.out.println("Se recibio el mensaje "+msg2+ " correspondiente a la llave simetrica");
 
                //Cifrar nombre del cliente con publica del servidor
                rsaCipher.init(Cipher.ENCRYPT_MODE, llavePublicaServidor);
@@ -147,7 +147,7 @@ public class Cliente extends Main
                //Recibir ACK como confirmacion de que el nombre del cliente existe
               //Si el mensaje es diferente a ACK es porque no existe y se termina comunicacion
                String msgCN = entradaServidor.readUTF();
-               System.out.println(msgCN);
+              // System.out.println(msgCN);
                if(!msgCN.equals("ACK")){
                     cs.close();
                }
@@ -178,7 +178,7 @@ public class Cliente extends Main
             rsaCiphera.init(Cipher.DECRYPT_MODE, llaveSimetrica, ivv);
             byte[] estadoPaqueteDescifrado = rsaCiphera.doFinal(Base64.getDecoder().decode(estadoPaque));
             String estadoPaqueteDescifrado2 = new String(estadoPaqueteDescifrado);
-            System.out.println("El estado del paquete solicitado es: "+estadoPaqueteDescifrado2);
+           // System.out.println("El estado del paquete solicitado es: "+estadoPaqueteDescifrado2);
 
             //Enviar ACK del estado del paquete
             salidaServidor.writeUTF("ACK");
@@ -198,21 +198,16 @@ public class Cliente extends Main
             String arregloMacD = entradaServidor.readUTF();
 
               
-
-
-            //Deberia ser igual?
             if(hmacCalculado.equals(arregloMacD)){
-                System.out.println("Hmac calculado: "+hmacCalculado);
-                System.out.println("Hmac recibido: "+arregloMacD);
+               // System.out.println("Hmac calculado: "+hmacCalculado);
+               // System.out.println("Hmac recibido: "+arregloMacD);
                 salidaServidor.writeUTF("TERMINAR");
-
-            }
-            
-        }
+                System.out.println("Nombre cliente: "+nombre+"\nId del paquete: "+idPaquete +"\nEl estado del paquete solicitado es: "+estadoPaqueteDescifrado2+"\n");
+             }
             
             //Finalizar conexion                      
             cs.close();
-
+            }
         }
         catch (Exception e)
         {
