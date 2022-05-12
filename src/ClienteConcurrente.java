@@ -26,7 +26,6 @@ public class ClienteConcurrente extends Main implements Runnable {
 
     // Atributos cliente
     private String nombre;
-    private int id;
     private String idPaquete;
     private String estadoPaqueteCliente;
 
@@ -39,8 +38,7 @@ public class ClienteConcurrente extends Main implements Runnable {
     private String mensaje;
     private byte[] msgCifrado;
 
-    public ClienteConcurrente(int idd, String nom, String idPaq, int nC) throws IOException {
-        this.id = idd;
+    public ClienteConcurrente(String nom, String idPaq) throws IOException {
         this.nombre = nom;
         this.idPaquete = idPaq;
         cs = new Socket(HOST, PUERTO); // Socket para el cliente en localhost en puerto 3400
