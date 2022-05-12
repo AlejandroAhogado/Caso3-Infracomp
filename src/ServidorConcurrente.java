@@ -46,10 +46,10 @@ public class ServidorConcurrente implements Runnable {
 
         numeroClientes = nC;
         ss = new ServerSocket(PUERTO);
-        cs = ss.accept();
-
         // Creacion socket del cliente y del servidor
         System.out.println("Esperando conexion...\n");
+
+        cs = ss.accept();
 
         if (nC == 4) {
             Thread servidor1 = new Thread(this);
@@ -325,7 +325,7 @@ public class ServidorConcurrente implements Runnable {
 
             despedirse();
 
-            ss.close();
+            //ss.close();
         } catch (Exception e) {
             e.printStackTrace();
         }

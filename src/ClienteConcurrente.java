@@ -39,18 +39,18 @@ public class ClienteConcurrente extends Main implements Runnable {
     private String mensaje;
     private byte[] msgCifrado;
 
-    public ClienteConcurrente(int idd, String nom, String idPaq) throws IOException {
+    public ClienteConcurrente(int idd, String nom, String idPaq, int nC) throws IOException {
         this.id = idd;
         this.nombre = nom;
         this.idPaquete = idPaq;
+        cs = new Socket(HOST, PUERTO); // Socket para el cliente en localhost en puerto 3400
     }
 
     @Override
     public void run() // deberia ser el run para los threads del cliente
     {
         try {
-            
-            cs = new Socket(HOST, PUERTO); // Socket para el cliente en localhost en puerto 3400
+
             // Flujo de datos hacia el servidor
             salidaServidor = new DataOutputStream(cs.getOutputStream());
 
