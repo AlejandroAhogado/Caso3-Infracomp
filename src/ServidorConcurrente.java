@@ -1,26 +1,19 @@
 import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
-import java.io.FileOutputStream;
 import java.io.FileReader;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Random;
-import java.util.Scanner;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.math.BigInteger;
 import javax.crypto.*;
 import java.security.*;
 import javax.crypto.Cipher;
-import java.security.spec.PKCS8EncodedKeySpec;
-import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 
 import javax.crypto.spec.IvParameterSpec;
@@ -32,10 +25,10 @@ public class ServidorConcurrente implements Runnable {
     private static String salt = "#$T0d0$Sab3#M3j0r!C0n=Sal#$";
     private static int contador = 0;
     private static int numeroClientes;
+    private static Socket cs; // Socket del cliente
 
     private String serverMessage; // Mensajes entrantes (recibidos) en el servidor
     private ServerSocket ss; // Socket del servidor
-    private Socket cs; // Socket del cliente
     private DataOutputStream salidaCliente;
     private ObjectOutputStream salidaClienteObjeto; // Flujo de datos de salida
     private DataInputStream entradaCliente;
@@ -53,12 +46,120 @@ public class ServidorConcurrente implements Runnable {
 
         numeroClientes = nC;
         ss = new ServerSocket(PUERTO);
-        cs = new Socket();
         cs = ss.accept();
 
-        Thread servidor1 = new Thread(this);
-	    servidor1.start();
-    
+        // Creacion socket del cliente y del servidor
+        System.out.println("Esperando conexion...\n");
+
+        if (nC == 4) {
+            Thread servidor1 = new Thread(this);
+            servidor1.start();
+            Thread servidor2 = new Thread(this);
+            servidor2.start();
+            Thread servidor3 = new Thread(this);
+            servidor3.start();
+            Thread servidor4 = new Thread(this);
+            servidor4.start();
+        } else if (nC == 16) {
+            Thread servidor1 = new Thread(this);
+            servidor1.start();
+            Thread servidor2 = new Thread(this);
+            servidor2.start();
+            Thread servidor3 = new Thread(this);
+            servidor3.start();
+            Thread servidor4 = new Thread(this);
+            servidor4.start();
+            Thread servidor5 = new Thread(this);
+            servidor5.start();
+            Thread servidor6 = new Thread(this);
+            servidor6.start();
+            Thread servidor7 = new Thread(this);
+            servidor7.start();
+            Thread servidor8 = new Thread(this);
+            servidor8.start();
+            Thread servidor9 = new Thread(this);
+            servidor9.start();
+            Thread servidor10 = new Thread(this);
+            servidor10.start();
+            Thread servidor11 = new Thread(this);
+            servidor11.start();
+            Thread servidor12 = new Thread(this);
+            servidor12.start();
+            Thread servidor13 = new Thread(this);
+            servidor13.start();
+            Thread servidor14 = new Thread(this);
+            servidor14.start();
+            Thread servidor15 = new Thread(this);
+            servidor15.start();
+            Thread servidor16 = new Thread(this);
+            servidor16.start();
+        } else if (nC == 32) {
+            Thread servidor1 = new Thread(this);
+            servidor1.start();
+            Thread servidor2 = new Thread(this);
+            servidor2.start();
+            Thread servidor3 = new Thread(this);
+            servidor3.start();
+            Thread servidor4 = new Thread(this);
+            servidor4.start();
+            Thread servidor5 = new Thread(this);
+            servidor5.start();
+            Thread servidor6 = new Thread(this);
+            servidor6.start();
+            Thread servidor7 = new Thread(this);
+            servidor7.start();
+            Thread servidor8 = new Thread(this);
+            servidor8.start();
+            Thread servidor9 = new Thread(this);
+            servidor9.start();
+            Thread servidor10 = new Thread(this);
+            servidor10.start();
+            Thread servidor11 = new Thread(this);
+            servidor11.start();
+            Thread servidor12 = new Thread(this);
+            servidor12.start();
+            Thread servidor13 = new Thread(this);
+            servidor13.start();
+            Thread servidor14 = new Thread(this);
+            servidor14.start();
+            Thread servidor15 = new Thread(this);
+            servidor15.start();
+            Thread servidor16 = new Thread(this);
+            servidor16.start();
+            Thread servidor17 = new Thread(this);
+            servidor17.start();
+            Thread servidor18 = new Thread(this);
+            servidor18.start();
+            Thread servidor19 = new Thread(this);
+            servidor19.start();
+            Thread servidor20 = new Thread(this);
+            servidor20.start();
+            Thread servidor21 = new Thread(this);
+            servidor21.start();
+            Thread servidor22 = new Thread(this);
+            servidor22.start();
+            Thread servidor23 = new Thread(this);
+            servidor23.start();
+            Thread servidor24 = new Thread(this);
+            servidor24.start();
+            Thread servidor25 = new Thread(this);
+            servidor25.start();
+            Thread servidor26 = new Thread(this);
+            servidor26.start();
+            Thread servidor27 = new Thread(this);
+            servidor27.start();
+            Thread servidor28 = new Thread(this);
+            servidor28.start();
+            Thread servidor29 = new Thread(this);
+            servidor29.start();
+            Thread servidor30 = new Thread(this);
+            servidor30.start();
+            Thread servidor31 = new Thread(this);
+            servidor31.start();
+            Thread servidor32 = new Thread(this);
+            servidor32.start();
+        }
+
     }
 
     enum Estado {
@@ -66,17 +167,16 @@ public class ServidorConcurrente implements Runnable {
         PKT_EN_ENTREGA, PKT_ENTREGADO, PKT_DESCONOCIDO;
     }
 
-    public synchronized void anunciarse(){
+    public synchronized void anunciarse() {
         System.out.println("Cliente " + contador + " en linea\n");
         contador++;
     }
 
-    public synchronized void despedirse(){
+    public synchronized void despedirse() {
         System.out.println("Conexion finalizada");
-        contador-=1;
+        contador -= 1;
         notify();
     }
-
 
     @Override
     public void run() {
@@ -89,9 +189,6 @@ public class ServidorConcurrente implements Runnable {
             Cipher rsaCiphera = Cipher.getInstance("AES/CBC/PKCS5Padding");
             publickey = keypair.getPublic();
             privateKey = keypair.getPrivate();
-
-            // Creacion socket del cliente y del servidor
-            System.out.println("Esperando conexion...\n");
 
             while (contador > numeroClientes) {
                 Thread.yield();
