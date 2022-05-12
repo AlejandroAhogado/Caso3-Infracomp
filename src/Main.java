@@ -1,6 +1,8 @@
 import java.io.IOException;
 import java.util.Scanner;
 
+import javax.sql.rowset.CachedRowSet;
+
 
 public class Main {
 
@@ -16,42 +18,54 @@ public class Main {
 			tipoEjecutar = sc.nextLine();
 		}
 		
-		System.out.println("Ingrese cuantos clientes desea");
+		System.out.println("Ingrese cuantas consultas desea realizar");
 		int numeroClientes = sc.nextInt();
-		
-		if(tipoEjecutar.equals("servidor"))
-		{
-			 Servidor servidor = new Servidor(numeroClientes); 
 
-		     System.out.println("\nIniciando servidor\n");
-		     servidor.startServer(); 
-		}
-		else
-		{		
-			Scanner sa = new Scanner(System.in);
-			for(int i=0; i<numeroClientes ; i++)
+		System.out.println("Ingrese el numero del escenario que desea ejecutar \n 1.Iterativo \n 2.Sincronizado  ");
+		int escenario = sc.nextInt();
+		
+			switch(escenario)
 			{
-				//id, nombre, idPaquete
-				
-				
-
-				System.out.println("\nEsperando...\n");
-
-				System.out.println("Ingrese el nombre del cliente:");
-				String nombreCliente = sa.nextLine();
-
-				System.out.println("\nIngrese el id del paquete");
-				String idPaquete = sa.nextLine();
-
-				System.out.println("\nIniciando cliente numero "+i);
-				Cliente cliente = new Cliente(i,nombreCliente, idPaquete);
-		        cliente.startClient(); 
-				
-			}
-			sa.close();
-		}
+				case 1:
 		
-		sc.close();
+						if(tipoEjecutar.equals("servidor"))
+						{
+							Servidor servidor = new Servidor(numeroClientes); 
+
+							System.out.println("\nIniciando servidor\n");
+							servidor.startServer(); 
+						}
+						else
+						{		
+							Scanner sa = new Scanner(System.in);
+							for(int i=0; i<numeroClientes ; i++)
+							{
+								//id, nombre, idPaquete
+								
+								
+
+								System.out.println("\nEsperando...\n");
+
+								System.out.println("Ingrese el nombre del cliente:");
+								String nombreCliente = sa.nextLine();
+
+								System.out.println("\nIngrese el id del paquete");
+								String idPaquete = sa.nextLine();
+
+								System.out.println("\nIniciando consulta numero "+i);
+								Cliente cliente = new Cliente(i,nombreCliente, idPaquete);
+								cliente.startClient(); 
+								
+							}
+							sa.close();
+						}
+						break;
+
+				case 2:
+				//Usar para caso sincronizado
+			}
+						
+	sc.close();
 	}
 
 

@@ -238,7 +238,7 @@ public class Servidor {
                     //Recibir TERMINAR del hmac
                     //Revisar hmac, deberia ser igual con los mismos valores?
                     String msgi = entradaCliente.readUTF();
-                System.out.println(msgi); 
+               // System.out.println(msgi); 
 
 
                 }
